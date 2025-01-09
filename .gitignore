@@ -33,6 +33,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Archivos de configuración Arduino/ESP32
+esp32_nfc/config.h
+
 # Otros
 *.bak
 *.tmp

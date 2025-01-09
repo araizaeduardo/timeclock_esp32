@@ -5,16 +5,13 @@
 #include <MFRC522v2.h>
 #include <MFRC522DriverSPI.h>
 #include <MFRC522DriverPinSimple.h>
-
-// Configuración WiFi
-const char* ssid = "EnergyPinPonPan";
-const char* password = "11988587";
+#include "config.h"
 
 // Configuración del servidor
-const char* serverUrl = "http://192.168.86.58:5007/read_nfc";
+const char* serverUrl = SERVER_URL;
 
 // Configuración MFRC522
-MFRC522DriverPinSimple ss_pin(21); // SDA
+MFRC522DriverPinSimple ss_pin(NFC_SS_PIN); // SDA
 MFRC522DriverSPI driver{ss_pin};
 MFRC522 mfrc522{driver};
 
@@ -32,7 +29,7 @@ void setup() {
   
   // Inicializar WiFi
   Serial.print("Conectando a WiFi");
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
   // Parpadear LED mientras se conecta
   int intentos = 0;
@@ -147,7 +144,7 @@ void checkWiFiConnection() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Conexión WiFi perdida. Reconectando...");
     WiFi.disconnect();
-    WiFi.begin(ssid, password);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     
     // Esperar reconexión
     int intentos = 0;
