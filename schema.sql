@@ -48,4 +48,4 @@ VALUES
 ('Juan Pérez', '04A5B9C2', '05846abb5a0a9d9648deb49f11891bddb5f0056a91d2b3c9e5f7b64b4e1d2c9a', 'Ventas', '09:00', '18:00'),
 ('María García', '14B5C9D2', '3b6c4cf6a644a989d2ef71e81b2261c8d147d0cc75cc0ae8e8b79d56c1ead8a1', 'Marketing', '08:00', '17:00'),
 ('Carlos López', '24C5D9E2', '4b2e98bc7972d699b2516bca474c8c5f716bb6a6f5ec9c5f4d5b92d8997fde2f', 'IT', '10:00', '19:00'),
-('Eduardo Araiza', '123465', '71eaea56f7f31be16276ab904b8b04144daf720badab79d5cf291edbbfa950fd', 'IT', '11:00', '19:00');
+('Eduardo', '123465', '71eaea56f7f31be16276ab904b8b04144daf720badab79d5cf291edbbfa950fd', 'IT', '11:00', '19:00');
