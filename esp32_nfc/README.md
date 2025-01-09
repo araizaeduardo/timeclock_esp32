@@ -1,132 +1,125 @@
-# ESP32 + NFC (MFRC522) para Control de Asistencia
+# Sistema de Control de Asistencia con ESP32 y MFRC522
 
-## Componentes Necesarios
+Este proyecto implementa un lector NFC usando ESP32 y el módulo MFRC522 para registrar asistencia de empleados.
 
-1. **ESP32** (cualquier modelo, recomendado ESP32-WROOM)
-2. **Módulo MFRC522** (lector NFC)
-3. **Buzzer** (opcional, para feedback sonoro)
-4. **LED** (opcional, ya incluido en ESP32)
-5. **Cables Dupont** para conexiones
+## Requisitos de Hardware
+
+- ESP32 DevKit
+- Módulo MFRC522 (Lector NFC)
+- LED (incorporado en ESP32)
+- Buzzer (opcional)
+- Cables de conexión
 
 ## Conexiones
 
-### MFRC522 a ESP32
-```
-ESP32     ->  MFRC522
-3.3V      ->  3.3V/VCC
-GND       ->  GND
-GPIO23    ->  MOSI
-GPIO19    ->  MISO
-GPIO18    ->  SCK
-GPIO21    ->  SDA/SS
-```
+1. **MFRC522 a ESP32**:
+   - SDA (SS) -> GPIO 5
+   - SCK -> GPIO 18
+   - MOSI -> GPIO 23
+   - MISO -> GPIO 19
+   - RST -> GPIO 27
+   - VCC -> 3.3V
+   - GND -> GND
 
-### Buzzer (Opcional)
-```
-ESP32     ->  Buzzer
-GPIO4     ->  PIN positivo (+)
-GND       ->  PIN negativo (-)
-```
+2. **Buzzer**:
+   - Pin positivo -> GPIO 4
+   - Pin negativo -> GND
 
-## Instalación del Software
+## Configuración del Software
 
-### 1. Configurar Arduino IDE para ESP32
-1. Abre Arduino IDE
-2. Ve a `File -> Preferences` (`Archivo -> Preferencias`)
-3. En "Additional Boards Manager URLs" agrega:
+1. **Instalar Dependencias**:
+   En el Arduino IDE, instalar las siguientes bibliotecas:
+   - MFRC522 (por GithubCommunity)
+   - ESP32 (por Espressif Systems)
+
+2. **Configuración del Proyecto**:
+   ```bash
+   # 1. Clonar el repositorio
+   git clone https://github.com/tu-usuario/timeclock.git
+   cd timeclock/esp32_nfc
+
+   # 2. Copiar el archivo de configuración
+   cp config.example.h config.h
    ```
-   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-   ```
-4. Ve a `Tools -> Board -> Boards Manager`
-5. Busca "esp32"
-6. Instala "ESP32 by Espressif Systems"
 
-### 2. Instalar Biblioteca MFRC522
-1. Ve a `Sketch -> Include Library -> Manage Libraries`
-2. Busca "MFRC522"
-3. Instala "MFRC522 by GithubCommunity" versión 2.0.0 o superior
-4. Reinicia Arduino IDE
-
-### 3. Configurar la Placa
-1. Selecciona `Tools -> Board -> ESP32 Arduino -> ESP32 Dev Module`
-2. Configura:
-   - Upload Speed: 115200
-   - CPU Frequency: 240MHz
-   - Flash Frequency: 80MHz
-   - Flash Mode: QIO
-   - Flash Size: 4MB
-   - Partition Scheme: Default
-
-## Configuración del Código
-
-1. Abre `esp32_nfc.ino`
-2. Modifica las variables de conexión:
+3. **Editar Configuración**:
+   Abrir `config.h` y configurar:
    ```cpp
-   const char* ssid = "TU_WIFI";
-   const char* password = "TU_PASSWORD";
-   const char* serverUrl = "http://TU_IP:5007/read_nfc";
+   // Credenciales WiFi
+   #define WIFI_SSID "tu-red-wifi"
+   #define WIFI_PASSWORD "tu-contraseña-wifi"
+
+   // Configuración del servidor
+   #define SERVER_HOST "ip-de-tu-servidor"
+   #define SERVER_PORT 5007
+
+   // Pines (modificar si usas diferentes conexiones)
+   #define NFC_SS_PIN 5
+   #define NFC_RST_PIN 27
    ```
 
-## Verificación del Hardware
+## Compilación y Carga
 
-### 1. Verificar Conexiones
-- Usa un multímetro para comprobar:
-  - Voltaje en 3.3V del MFRC522
-  - Continuidad en conexiones GND
-  - No hay cortocircuitos
+1. Abrir Arduino IDE
+2. Seleccionar la placa: `Tools -> Board -> ESP32 -> ESP32 Dev Module`
+3. Seleccionar el puerto COM correcto
+4. Compilar y cargar el código
 
-### 2. LED Indicadores
-- **LED del ESP32 (GPIO2)**:
-  - Parpadeo rápido = Conectando WiFi
-  - Encendido breve = Lectura exitosa
-  - Parpadeo doble = Error
+## Uso
 
-- **LED del MFRC522**:
-  - Rojo fijo = Alimentación correcta
-  - Verde parpadeante = Actividad
+1. Al encender, el ESP32:
+   - Intentará conectarse al WiFi (LED parpadeando)
+   - LED encendido fijo = conectado
+   - LED apagado = error de conexión
+
+2. Para registrar asistencia:
+   - Acercar la tarjeta NFC al lector
+   - Beep corto = lectura exitosa
+   - Beep largo = error de lectura
+
+3. Indicadores:
+   - LED parpadeando rápido = procesando tarjeta
+   - Beep doble = registro exitoso
+   - Beep largo = error en el registro
 
 ## Solución de Problemas
 
-### 1. Errores de Compilación
-- Biblioteca MFRC522 v2.0.0 o superior instalada
-- ESP32 board package instalado
-- Placa correcta seleccionada
+1. **No se conecta al WiFi**:
+   - Verificar credenciales en `config.h`
+   - Asegurar que la red esté disponible
+   - Revisar que el ESP32 esté en rango
 
-### 2. Errores de Conexión WiFi
-- Credenciales WiFi correctas
-- ESP32 dentro del alcance del router
-- Red 2.4GHz (no 5GHz)
+2. **Error de lectura NFC**:
+   - Verificar conexiones del MFRC522
+   - Asegurar que la tarjeta sea compatible
+   - Mantener la tarjeta más cerca del lector
 
-### 3. Errores de Lectura NFC
-- Cables correctamente conectados
-- Voltaje 3.3V estable
-- Tarjeta compatible (MIFARE Classic/M302)
-- Distancia de lectura adecuada (0-3cm)
-
-### 4. Errores de Comunicación con Servidor
-- URL del servidor correcta
-- Servidor ejecutándose
-- Puerto 5007 accesible
-- ESP32 y servidor en la misma red
+3. **No se registra la asistencia**:
+   - Verificar que el servidor esté funcionando
+   - Comprobar la IP y puerto en `config.h`
+   - Revisar la conexión de red
 
 ## Mantenimiento
 
-### Recomendaciones
-1. Mantener el firmware actualizado
-2. Limpiar periódicamente los contactos
-3. Verificar voltajes mensualmente
-4. Mantener registro de errores
-5. Backup del código
+- Mantener el lector limpio
+- Verificar periódicamente las conexiones
+- Actualizar el firmware cuando sea necesario
+- Hacer respaldo del archivo `config.h`
 
-### Mejoras Futuras
-- [ ] Modo de bajo consumo
-- [ ] Pantalla OLED
-- [ ] Almacenamiento offline
-- [ ] Múltiples lectores
-- [ ] Encriptación de datos
+## Seguridad
 
+- No compartir el archivo `config.h`
+- Cambiar las contraseñas periódicamente
+- Mantener el firmware actualizado
+- Usar tarjetas NFC seguras
 
-### PRUEBAS
-curl -X POST http://localhost:5000/check -d nfc_id=04A5B9C2
+## Contribuir
 
-curl -X POST http://localhost:5000/check -d nfc_id=04A5B9C2 -H Content-Type: application/x-www-form-urlencoded
+1. Hacer fork del repositorio
+2. Crear una rama para tu feature
+3. Hacer commit de tus cambios
+4. Crear un pull request
+
+## Licencia
+
+Este proyecto está bajo la Licencia MIT.
