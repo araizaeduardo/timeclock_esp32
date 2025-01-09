@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block head %}
+<!-- FullCalendar CSS -->
+<link href='https://unpkg.com/@fullcalendar/core@4.4.0/main.min.css' rel='stylesheet' />
+<link href='https://unpkg.com/@fullcalendar/daygrid@4.4.0/main.min.css' rel='stylesheet' />
+<style>
+.fc-event {
+    cursor: pointer;
+    padding: 2px 4px;
+}
+.fc-day-grid-event .fc-content {
+    white-space: normal;
+    overflow: hidden;
+}
+.fc-content {
+    padding: 2px;
+}
+.attendance-ontime {
+    background-color: #10B981;
+    border-color: #059669;
+}
+.attendance-late {
+    background-color: #F59E0B;
+    border-color: #D97706;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Panel de Reportes -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="space-y-1">
+                    <h2 class="text-2xl font-bold text-gray-900">Reportes de Asistencia</h2>
+                    <p class="text-sm text-gray-500">Seleccione un rango de fechas para generar el reporte</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex space-x-2">
+                        <button onclick="setDateRange('today')"
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Hoy
+                        </button>
+                        <button onclick="setDateRange('week')"
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Esta Semana
+                        </button>
+                        <button onclick="setDateRange('month')"
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Este Mes
+                        </button>
+                    </div>
+                    <form action="{{ url_for('generate_report') }}" method="POST" class="flex items-center space-x-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="flex space-x-4">
+                            <div>
+                                <label for="start_date" class="sr-only">Fecha Inicial</label>
+                                <input type="date" id="start_date" name="start_date" required
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="end_date" class="sr-only">Fecha Final</label>
+                                <input type="date" id="end_date" name="end_date" required
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
+                        </div>
+                        <button type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-file-excel mr-2"></i>
+                            Generar Reporte Excel
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendario -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <div id="calendar" style="min-height: 800px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- FullCalendar JS -->
+<script src='https://unpkg.com/@fullcalendar/core@4.4.0/main.min.js'></script>
+<script src='https://unpkg.com/@fullcalendar/daygrid@4.4.0/main.min.js'></script>
+<script src='https://unpkg.com/@fullcalendar/interaction@4.4.0/main.min.js'></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        plugins: [ 'dayGrid', 'interaction' ],
+        defaultView: 'dayGridMonth',
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth'
+        },
+        height: '100%',
+        locale: 'es',
+        firstDay: 1, // Lunes como primer día
+        buttonText: {
+            today: 'Hoy',
+            month: 'Mes'
+        },
+        selectable: true,
+        select: function(info) {
+            document.getElementById('start_date').value = info.startStr;
+            document.getElementById('end_date').value = info.endStr;
+        },
+        eventRender: function(info) {
+            var tooltip = new Tooltip(info.el, {
+                title: info.event.extendedProps.description,
+                placement: 'top',
+                trigger: 'hover',
+                container: 'body'
+            });
+        }
+    });
+
+    // Cargar los eventos del calendario
+    fetch('/get_attendance_data')
+        .then(response => response.json())
+        .then(data => {
+            const events = data.map(record => {
+                const isLate = new Date('1970-01-01T' + record.check_in).getTime() > 
+                             new Date('1970-01-01T' + record.schedule_in).getTime() + (15 * 60 * 1000);
+                
+                return {
+                    title: record.name,
+                    start: record.check_in,
+                    end: record.check_out || record.check_in,
+                    className: isLate ? 'attendance-late' : 'attendance-ontime',
+                    description: `
+                        Empleado: ${record.name}
+                        Departamento: ${record.department}
+                        Entrada: ${record.check_in.split(' ')[1]}
+                        ${record.check_out ? 'Salida: ' + record.check_out.split(' ')[1] : 'Sin salida'}
+                        ${isLate ? '⚠️ Llegada tardía' : '✓ A tiempo'}
+                    `
+                };
+            });
+            calendar.addEventSource(events);
+        });
+
+    calendar.render();
+});
+
+function setDateRange(range) {
+    const today = new Date();
+    let startDate = new Date(today);
+    let endDate = new Date(today);
+
+    switch(range) {
+        case 'today':
+            // No changes needed, both dates are today
+            break;
+        case 'week':
+            startDate.setDate(today.getDate() - today.getDay() + 1); // Start of week (Monday)
+            endDate.setDate(startDate.getDate() + 6); // End of week (Sunday)
+            break;
+        case 'month':
+            startDate.setDate(1); // Start of month
+            endDate.setMonth(today.getMonth() + 1, 0); // End of month
+            break;
+    }
+
+    document.getElementById('start_date').value = formatDate(startDate);
+    document.getElementById('end_date').value = formatDate(endDate);
+}
+
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
+
+// Set default date range to current month
+window.addEventListener('load', function() {
+    setDateRange('month');
+});
+</script>
+{% endblock %}

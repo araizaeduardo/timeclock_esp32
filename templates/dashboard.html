@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Encabezado -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Panel de Control</h1>
+            <p class="mt-2 text-sm text-gray-600">{{ current_date }}</p>
+        </div>
+
+        <!-- Tarjetas de Estadísticas -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+            <!-- Total Empleados -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <dt class="text-sm font-medium text-gray-500 truncate">Total Empleados</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ total_employees }}</dd>
+                </div>
+            </div>
+
+            <!-- Presentes Hoy -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <dt class="text-sm font-medium text-gray-500 truncate">Presentes Hoy</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-green-600">{{ present_today }}</dd>
+                </div>
+            </div>
+
+            <!-- Actualmente Dentro -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <dt class="text-sm font-medium text-gray-500 truncate">Actualmente Dentro</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-blue-600">{{ currently_in }}</dd>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registros del Día -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+                <h2 class="text-lg leading-6 font-medium text-gray-900">Registros de Hoy</h2>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500">Registro de entradas y salidas del día actual</p>
+            </div>
+            <div class="border-t border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Empleado
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Entrada
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Salida
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Estado
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for record in today_records %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ record[0] }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ record[1].strftime('%H:%M') }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if record[2] %}
+                                        <div class="text-sm text-gray-900">{{ record[2].strftime('%H:%M') }}</div>
+                                    {% else %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            En curso
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if not record[2] %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Dentro
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                            Fuera
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

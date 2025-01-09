@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    Administración de Empleados
+                </h2>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4">
+                <button type="button" onclick="showAddEmployeeModal()"
+                        class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Agregar Empleado
+                </button>
+            </div>
+        </div>
+
+        <!-- Lista de Empleados -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul class="divide-y divide-gray-200">
+                {% for employee in employees %}
+                <li>
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <span class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100">
+                                        <span class="text-lg font-medium leading-none text-gray-700">
+                                            {{ employee[1][:2].upper() }}
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ employee[1] }}
+                                        {% if not employee[6] %}
+                                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                Inactivo
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        <span class="mr-2">
+                                            <i class="fas fa-id-card"></i> {{ employee[2] }}
+                                        </span>
+                                        {% if employee[3] %}
+                                        <span class="mr-2">
+                                            <i class="fas fa-building"></i> {{ employee[3] }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-500 text-right">
+                                    <div>{{ employee[4] }} - {{ employee[5] }}</div>
+                                    <div>{{ employee[7] }} registros</div>
+                                </div>
+                                <button onclick="editEmployee({{ employee[0] }})"
+                                        class="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edición -->
+<div id="editModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form id="editForm" class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4" onsubmit="event.preventDefault(); saveEmployee();">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="employeeId" name="id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                        <input type="text" id="name" name="name" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="nfc_id" class="block text-sm font-medium text-gray-700">ID de NFC</label>
+                        <input type="text" id="nfc_id" name="nfc_id" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="department" class="block text-sm font-medium text-gray-700">Departamento</label>
+                        <input type="text" id="department" name="department"
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="schedule_in" class="block text-sm font-medium text-gray-700">Hora de Entrada</label>
+                            <input type="time" id="schedule_in" name="schedule_in" required
+                                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="schedule_out" class="block text-sm font-medium text-gray-700">Hora de Salida</label>
+                            <input type="time" id="schedule_out" name="schedule_out" required
+                                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <input type="tel" id="phone" name="phone"
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" id="is_active" name="is_active"
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                            Empleado Activo
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                    <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
+                        Guardar
+                    </button>
+                    <button type="button" onclick="closeEditModal()"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Agregar Empleado -->
+<div id="addModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form id="addForm" class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4" onsubmit="event.preventDefault(); addEmployee();">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="space-y-4">
+                    <div>
+                        <label for="add_name" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                        <input type="text" id="add_name" name="name" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="add_nfc_id" class="block text-sm font-medium text-gray-700">ID de NFC</label>
+                        <input type="text" id="add_nfc_id" name="nfc_id" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="add_department" class="block text-sm font-medium text-gray-700">Departamento</label>
+                        <input type="text" id="add_department" name="department"
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="add_schedule_in" class="block text-sm font-medium text-gray-700">Hora de Entrada</label>
+                            <input type="time" id="add_schedule_in" name="schedule_in" required
+                                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="add_schedule_out" class="block text-sm font-medium text-gray-700">Hora de Salida</label>
+                            <input type="time" id="add_schedule_out" name="schedule_out" required
+                                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="add_phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <input type="tel" id="add_phone" name="phone"
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+                
+                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                    <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
+                        Guardar
+                    </button>
+                    <button type="button" onclick="closeAddModal()"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAddEmployeeModal() {
+    document.getElementById('addModal').classList.remove('hidden');
+}
+
+function closeAddModal() {
+    document.getElementById('addModal').classList.add('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+}
+
+function editEmployee(id) {
+    fetch(`/edit_employee/${id}`, {
+        headers: {
+            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        document.getElementById('employeeId').value = data.id;
+        document.getElementById('name').value = data.name;
+        document.getElementById('nfc_id').value = data.nfc_id;
+        document.getElementById('department').value = data.department || '';
+        document.getElementById('schedule_in').value = data.schedule_in;
+        document.getElementById('schedule_out').value = data.schedule_out;
+        document.getElementById('phone').value = data.phone || '';
+        document.getElementById('is_active').checked = data.is_active;
+        document.getElementById('editModal').classList.remove('hidden');
+    })
+    .catch(error => {
+        alert('Error al cargar datos del empleado: ' + error);
+    });
+}
+
+function saveEmployee() {
+    const id = document.getElementById('employeeId').value;
+    const data = {
+        name: document.getElementById('name').value,
+        nfc_id: document.getElementById('nfc_id').value,
+        department: document.getElementById('department').value,
+        schedule_in: document.getElementById('schedule_in').value,
+        schedule_out: document.getElementById('schedule_out').value,
+        phone: document.getElementById('phone').value,
+        is_active: document.getElementById('is_active').checked
+    };
+    
+    fetch(`/update_employee/${id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Error al actualizar empleado');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert('Empleado actualizado correctamente');
+        location.reload();
+    })
+    .catch(error => {
+        alert(error.message);
+    });
+}
+
+function addEmployee() {
+    const data = {
+        name: document.getElementById('add_name').value,
+        nfc_id: document.getElementById('add_nfc_id').value,
+        department: document.getElementById('add_department').value,
+        schedule_in: document.getElementById('add_schedule_in').value,
+        schedule_out: document.getElementById('add_schedule_out').value,
+        phone: document.getElementById('add_phone').value
+    };
+    
+    fetch('/register_employee', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert(`Empleado agregado correctamente.\nContraseña inicial: ${data.password}`);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        alert('Error al agregar empleado: ' + error);
+    });
+}
+</script>
+{% endblock %}
